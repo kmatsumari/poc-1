@@ -356,35 +356,6 @@ function tokenize(m) {
     return m.split(" ");
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// function which log in the bot
-
-
+require('dotenv').config();
+client.login(process.env.access_key);
 
