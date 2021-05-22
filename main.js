@@ -281,7 +281,7 @@ function set_reminder(author, guild, userToTank, reason, oldRoles, duration, uom
     tankee_obj = {
         guild_id: guild.id,
         user_tanked: userToTank,
-        tanked_by: author,
+        tanked_by: author.username,
         reason: reason, 
         time_tanked: ts,
         time_to_untank: untank_time,
@@ -318,12 +318,14 @@ function check_tank(message) {
             var diffhours = parseInt((now - dateTanked) / (1000 * 60 * 60)); 
             var diffmins = parseInt((now - dateTanked) / (1000 * 60));
             diffmins = diffmins - (diffhours * 60)
-            msg = "(tanked " + diffhours + " hours and " + diffmins  + " minutes ago by " + obj.tanked_by.username + " for " + obj.reason + ")";
+            msg = "(tanked " + diffhours + " hours and " + diffmins  + " minutes ago by " + obj.tanked_by + " for " + obj.reason + ")";
             if (ts > obj.time_to_untank) {
                 message.channel.send(obj.user_tanked + " has served their time. " + msg);
+                console.log(obj.user_tanked + " has served their time. " + msg);
             }
             else {
                 message.channel.send(obj.user_tanked + " still has time to wait. " + msg);
+                console.log(obj.user_tanked + " has served their time. " + msg);
             }
         }
         if (nobody) {
