@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node tests.js",
     "testserver": "node main.js test",
+    "testserver:linux": "node main.js test_linux",
     "druncord": "node main.js druncord"
   },
   "license": "ISC",
