@@ -162,7 +162,7 @@ async function handleTank(message, msg) {
     const oldRoles = Array.from(guild_member.roles.cache.mapValues(role => role.id).keys());
 
     console.log("Drunk tanking " + discord_user.username + " -- initiated by " + message.author.username);
-
+  
     //clear all their existing roles
     return guild_member.roles.set([config.drunktankRole], "Drunk tanked by " + message.author.username)    
         .then(() => {
@@ -196,6 +196,7 @@ function handleCheckTank(message) {
         var obj = json[n];
         if (obj.archive) {
             continue;   
+
         }
         var datediff = helpers.getDateDiffString(ts, obj.time_tanked)
         msg = "(tanked " + datediff + " ago by " + obj.tanked_by + " for " + obj.reason + ")";
