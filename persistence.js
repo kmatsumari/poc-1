@@ -20,15 +20,15 @@ function saveTanking(author, guild, userToTank, reason, oldRoles, duration, uom)
             untank_time = ts + (duration*60*1000)
             break;
     }
-    console.log(author);
+
     tankee_obj = {
         guild_id: guild.id,
-        user_tanked: userToTank.username,
-        tanked_by: author.username,
+        user_tanked: userToTank,
+        tanked_by: author,
         reason: reason, 
         time_tanked: ts,
         time_to_untank: untank_time,
-        role_to_remove: drunktankRole,
+        role_to_remove: config.drunktankRole,
         roles_to_give_back: oldRoles,
         archive: false
     }
@@ -46,6 +46,9 @@ function saveTanking(author, guild, userToTank, reason, oldRoles, duration, uom)
 }
 
 function getTankedUsers() {
+    if (!fs.existsSync(config.json_path)) {
+        return [];
+    }
     var data = fs.readFileSync(config.json_path);
     var json = JSON.parse(data)
     return json 

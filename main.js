@@ -6,16 +6,17 @@ if (process.argv.length < 3) {
     return;
 }
 configFile = process.argv[2];
-var config = require('./config/' + configFile);
-var helpers = require('./helpers');
-var persistence = require('./persistence');
-var messages = require('./messages')
+const config = require('./config/' + configFile);
+const helpers = require('./helpers');
+const persistence = require('./persistence');
+const messages = require('./messages')
 
 
 console.log(config.bot_name + " " + BOT_VERSION + " starting up");
 console.log("Configuration: " + configFile);
 
 persistence.injectConfig(config);
+helpers.injectConfig(config);
 
 const Discord = require("discord.js");
 const client  = new Discord.Client();
@@ -27,12 +28,32 @@ client.on("ready", () => {
     console.log(config.bot_name + " successfully started.");
 });
 
-client.on("message",  (message) => {
+client.on("message", async  (message) => {
     // It will do nothing when the message doesnt start with the prefix
     if(!message.content.startsWith(config.commandPrefix)) return;
 
+ 
+
+
     const command = helpers.trimCommand(message);
     const msg = helpers.trimMsg(message);
+
+
+    fetchObj = {
+        user: message.author,
+        cache: false,
+        force: true
+    };
+
+    refreshedAuthorObj = await message.guild.members.fetch(fetchObj);
+    
+    if (!helpers.doesUserHaveRole(refreshedAuthorObj, config.botMasterRole)) {
+        console.log ("UNAUTHORIZED USAGE ATTEMPT: " + message.author.username + " Tried to use me with this command: " + command);
+        message.channel.send("You don't have the rights to use me you filthy swine.");
+        return;
+    }
+  
+    
 
     switch (command) {
         case "help":
@@ -40,15 +61,16 @@ client.on("message",  (message) => {
             break;
         
         case "tank":
-            handleTank(message, msg);
+            return handleTank(message, msg);
+            break;
+
+        case "untank":
+            return handleUntank(message, msg);
             break;
 
         case "checktank":
             handleCheckTank(message);
             break;
-
-        case "untank":
-            handleUntank(message, msg);
 
         case "tankstats":
             handleTankStats(message);  
@@ -63,8 +85,8 @@ client.on("message",  (message) => {
 function handleUntank(message, msg) {
     tokens = helpers.tokenize(msg.substr(1,msg.length -1 ));
         
-    if (tokens.length < 2) {
-        message.channel.send("Invalid arguments. Correct usage: &&untank @user reason");
+    if (tokens.length < 1) {
+        message.channel.send("Invalid arguments. Correct usage: &&untank @user optionalreason");
         return;
     }
     var reason = helpers.getReason(tokens);
@@ -91,15 +113,18 @@ function handleUntank(message, msg) {
         }
     }
 
-    return guild_member.setRoles(user.roles_to_give_back) 
+    console.log("Untanking " + userToUntank + " -- initiated by " + message.author.username);
+
+    console.log(user.roles_to_give_back);
+    return guild_member.roles.set(user.roles_to_give_back) 
         .then(() => {
             let ts = Date.now();
             var datediff = helpers.getDateDiffString(ts, user.time_tanked);
-            msg = messages.log_blue_untank(message.author.username, guild_member, userToUntank, reason, datediff);
+            msg = messages.log_blue_untank_msg(message.author.username, guild_member, userToUntank, reason, datediff);
             return messages.write_to_channel(message.guild, config.logChannel, msg);
         }) 
         .then(() => {
-            msg = messages.confirm_untank_message(message.author, userToUntank, reason, user.roles_to_give_back)
+            msg = messages.confirm_untank_message(message.author.username, userToUntank, reason, user.roles_to_give_back)
             return message.channel.send(msg);
         })
         .catch((error) => {
@@ -110,7 +135,7 @@ function handleUntank(message, msg) {
         });;
 }
 
-function handleTank(message, msg) {
+async function handleTank(message, msg) {
     tokens = helpers.tokenize(msg.substr(1,msg.length -1 ));
         
     if (tokens.length < 2) {
@@ -118,7 +143,7 @@ function handleTank(message, msg) {
         return;
     }
 
-    var reason = getReason(tokens);
+    var reason = helpers.getReason(tokens);
 
     if (!helpers.validateReason(reason, message)) {
         return;
@@ -131,25 +156,28 @@ function handleTank(message, msg) {
     const discord_user = message.mentions.users.first();
     const guild_member = message.guild.member(discord_user);
 
-    const role_name = message.guild.roles.get(config.drunktankRole);
-    const oldRoles = Array.from(guild_member.roles.keys());
+    const role = await message.guild.roles.fetch(config.drunktankRole);
+    const role_name = role.name;
 
+    const oldRoles = Array.from(guild_member.roles.cache.mapValues(role => role.id).keys());
+
+    console.log("Drunk tanking " + discord_user.username + " -- initiated by " + message.author.username);
 
     //clear all their existing roles
-    return guild_member.setRoles([config.drunktankRole], "Drunk tanked by " + message.author)    
+    return guild_member.roles.set([config.drunktankRole], "Drunk tanked by " + message.author.username)    
         .then(() => {
-            msg = messages.log_blue_tank(message.author, guild_member, userToTank, reason);
+            msg = messages.log_blue_tank_msg(message.author.username, guild_member, userToTank, reason);
             return messages.write_to_channel(message.guild, config.logChannel, msg)
         })
         .then(() => {
-            msg = messages.tank_msg(message.author, userToTank, reason, config.tankDuration, config.tankUOM)
+            msg = messages.tank_msg(message.author.username, userToTank, reason, config.tankDuration, config.tankUOM)
             return messages.write_to_channel(message.guild, config.tankChannel, msg)
         })
         .then(() => {
-            return persistence.saveTanking(message.author, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
+            return persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
         })
         .then(() => {
-            msg = messages.confirm_message(message.author, userToTank, reason, role_name);
+            msg = messages.confirm_message(message.author.username, userToTank, reason, role_name);
             return message.channel.send(msg);
         })
         .catch((error) => {
@@ -184,7 +212,7 @@ function handleCheckTank(message) {
             concat = msg;
         }
         else {
-            concat += concat + '\r\n' + msg;
+            concat += '\r\n' + msg;
         }
     }
     if (concat != "") toSend.push(concat);

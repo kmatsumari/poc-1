@@ -5,12 +5,12 @@
   "main": "main.js",
   "scripts": {
     "test": "node tests.js",
-    "run:testserver": "node main.js test",
-    "run:druncord": "node main.js druncord"
+    "testserver": "node main.js test",
+    "druncord": "node main.js druncord"
   },
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.3.2",
+    "discord.js": "^12.5.3",
     "dotenv": "^10.0.0"
   }
 }

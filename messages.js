@@ -35,7 +35,7 @@ function tank_msg(author, userToTank, reason, duration, uom) {
 }
 
 function write_to_channel(guild, channel_id, msg) {
-    channel = guild.channels.get(channel_id);
+    channel = guild.channels.resolve(channel_id);
     return channel.send(msg);
 }
 

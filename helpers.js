@@ -1,12 +1,14 @@
+var config ;
+
+function injectConfig(myConfig) {
+    config = myConfig;
+}
+
 function getDateDiffString(future, past) {
     var diffseconds = parseInt((future - past) / 1000); 
     var diffMinutes = diffseconds / 60
     var diffHours = diffMinutes / 60
 
-
-    console.log (diffseconds )
-    console.log (diffMinutes)
-    console.log(diffHours)
     var seconds =  parseInt(diffseconds % 60);
     var minutes =  parseInt(diffMinutes % 60);
     var hours =  parseInt(diffHours > 23 ? diffHours % 24 : diffHours);
@@ -61,13 +63,20 @@ function trimCommand(message) {
 }
 
 function trimMsg(message) {
-    message.content.toLowerCase().split(" ")[0];
-    message.content.slice(command.length);
+    let command = message.content.toLowerCase().split(" ")[0];
+    msg =  message.content.slice(command.length); 
+    return msg;
 }
 
-//Check if a user has a particular role
-function checkUserRole(userObj, roleId) {
-    
+function doesUserHaveRole(userObj, roleId) {
+    var retval = false;
+
+    for (n=0;n<userObj._roles.length;n++) {
+        if (userObj._roles[n] == roleId) {
+            retval = true;
+        }
+    }
+    return retval;
 }
 
 exports.getDateDiffString = getDateDiffString;
@@ -77,3 +86,5 @@ exports.validateMentions = validateMentions;
 exports.tokenize = tokenize;
 exports.trimCommand = trimCommand;
 exports.trimMsg = trimMsg;
+exports.injectConfig = injectConfig;
+exports.doesUserHaveRole = doesUserHaveRole;
