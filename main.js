@@ -10,7 +10,7 @@ var config = require('./config/' + configFile);
 var helpers = require('./helpers');
 var persistence = require('./persistence');
 var messages = require('./messages')
-require('dotenv').config();
+
 
 console.log(config.bot_name + " " + BOT_VERSION + " starting up");
 console.log("Configuration: " + configFile);
@@ -19,30 +19,24 @@ persistence.injectConfig(config);
 
 const Discord = require("discord.js");
 const client  = new Discord.Client();
-client.login(process.env.access_key);
+client.login(config.access_key);
+
 
 
 client.on("ready", () => {
-    console.log("StevieBot successfully started.");
+    console.log(config.bot_name + " successfully started.");
 });
 
 client.on("message",  (message) => {
     // It will do nothing when the message doesnt start with the prefix
     if(!message.content.startsWith(config.commandPrefix)) return;
 
-
-    // This cuts out the command from the message which was sent and cuts out the prefix
-    // So when you check if a specific command was executed, you must not type
-    let command = message.content.toLowerCase().split(" ")[0];
-    //Strip the command and the prefix for the message for processing
-    var msg =  message.content.slice(command.length);
-    //Strip the prefix for analysing the command
-    command = command.slice(config.commandPrefix.length);
-    
+    const command = helpers.trimCommand(message);
+    const msg = helpers.trimMsg(message);
 
     switch (command) {
         case "help":
-            handleHelp(message,);
+            handleHelp(message);
             break;
         
         case "tank":
@@ -63,7 +57,6 @@ client.on("message",  (message) => {
         default:
             message.channel.send("I don't know that command. Want me to build it? Do it yourself you lazy throbber");
             break;
-
     }
 });
 
@@ -92,7 +85,6 @@ function handleUntank(message, msg) {
         return;
     }
        
-    //Make sure we remove 2drunk2party
     for( var i = 0; i < user.roles_to_give_back.length; i++){ 
         if (user.roles_to_give_back[i] === user.role_to_remove) { 
             user.roles_to_give_back.splice(i, 1); 
@@ -231,12 +223,10 @@ function handleTankStats(message) {
 
 function handleHelp(message) {
     let embed = new Discord.RichEmbed()
-        .addField("&&tank", "drunk tanks a user. usage: &&tank @user reason")
-        .addField("&&checktank", "Checks the current users in the tank")
-        .addField("&&untank", "Untank a user. usage: &&untank @user reason")
-
-        .addField("&&tankstats", "Stats for fun. not implement yet")
-
+        .addField("&&tank", "drunk tanks a user. usage: &&tank @user reason.")
+        .addField("&&checktank", "Checks the current users in the tank.")
+        .addField("&&untank", "Untank a user. usage: &&untank @user reason.")
+        .addField("&&tankstats", "Stats for fun. Not implemented yet.")
         .addField("&&help", "Sends this help embed")
         .setTitle(config.bot_name + " " + BOT_VERSION + " - commands help")
         .setFooter("Here you have all bot commands you can use!")

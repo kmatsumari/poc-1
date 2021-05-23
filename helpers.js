@@ -54,9 +54,21 @@ function tokenize(m) {
     return m.split(" ");
 }
 
+function trimCommand(message) {
+    let command = message.content.toLowerCase().split(" ")[0];
+    command = command.slice(config.commandPrefix.length);
+    return command;
+}
+
+function trimMsg(message) {
+    message.content.toLowerCase().split(" ")[0];
+    message.content.slice(command.length);
+}
 
 exports.getDateDiffString = getDateDiffString;
 exports.getReason = getReason;
 exports.validateReason = validateReason;
 exports.validateMentions = validateMentions;
 exports.tokenize = tokenize;
+exports.trimCommand = trimCommand;
+exports.trimMsg = trimMsg;
