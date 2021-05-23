@@ -7,9 +7,9 @@ const botMasterRole = "846036899523985449";
 const serverID = "795115424634372147";
 const tankUOM = "hours";
 const tankDuration = "12";
-const commandPrefix = "&&";
+const commandPrefix = ".";
 const access_key = process.env.test_access_key;
-const json_path = "~/tankees.json";
+const json_path = "tankees.json";
 const bot_name = "StevieBot";
 
 exports.drunktankRole = drunktankRole

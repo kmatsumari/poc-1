@@ -1,16 +1,16 @@
 require('dotenv').config();
 
-const drunktankRole = "795125880363679745";
-const tankChannel = "795125618957484052";
-const logChannel = "795125578494640188";
-const botMasterRole = "846036899523985449";
+const drunktankRole = "753777735452852324";
+const tankChannel = "757031918628765806";
+const logChannel = "753778482844270605";
+const botMasterRole = "753412065456291901";
 const serverID = "795115424634372147";
 const tankUOM = "hours";
 const tankDuration = "12";
 const commandPrefix = ".";
-const access_key = process.env.test_access_key;
-const json_path = "C:/t/tankees.json";
-const bot_name = "StevieBot";
+const access_key = process.env.druncord_access_key;
+const json_path = "tankees.json";
+const bot_name = "TankCommander";
 
 exports.drunktankRole = drunktankRole
 exports.tankChannel = tankChannel

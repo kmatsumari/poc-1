@@ -1,13 +1,14 @@
 {
-  "name": "hello-world-discord-bot",
+  "name": "drunk_tank_bot",
   "version": "1.0.0",
-  "description": "Simple example project how to develop a Discord Bot based on the library Discord.js",
+  "description": "Drunk Tank bot",
   "main": "main.js",
   "scripts": {
     "test": "node tests.js",
     "testserver": "node main.js test",
     "testserver:linux": "node main.js test_linux",
-    "druncord": "node main.js druncord"
+    "druncord": "node main.js druncord",
+    "druncord_linux": "node main.js druncord_linux"
   },
   "license": "ISC",
   "dependencies": {

@@ -32,12 +32,8 @@ client.on("message", async  (message) => {
     // It will do nothing when the message doesnt start with the prefix
     if(!message.content.startsWith(config.commandPrefix)) return;
 
- 
-
-
     const command = helpers.trimCommand(message);
     const msg = helpers.trimMsg(message);
-
 
     fetchObj = {
         user: message.author,
@@ -53,8 +49,6 @@ client.on("message", async  (message) => {
         return;
     }
   
-    
-
     switch (command) {
         case "help":
             handleHelp(message);
@@ -74,6 +68,10 @@ client.on("message", async  (message) => {
 
         case "tankstats":
             handleTankStats(message);  
+            break;
+
+        case "bacon":
+            handleBacon(message);  
             break;
 
         default:
@@ -132,7 +130,7 @@ function handleUntank(message, msg) {
                 "\r\nDo I have the permissions to manage this user?" +
                 "\r\n"+error
             ); 
-        });;
+        });
 }
 
 async function handleTank(message, msg) {
@@ -170,15 +168,17 @@ async function handleTank(message, msg) {
             return messages.write_to_channel(message.guild, config.logChannel, msg)
         })
         .then(() => {
-            msg = messages.tank_msg(message.author.username, userToTank, reason, config.tankDuration, config.tankUOM)
-            return messages.write_to_channel(message.guild, config.tankChannel, msg)
-        })
-        .then(() => {
             return persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
         })
         .then(() => {
             msg = messages.confirm_message(message.author.username, userToTank, reason, role_name);
             return message.channel.send(msg);
+        })
+        .then(() => {
+            setTimeout(() => {
+                msg = messages.tank_msg(message.author.username, userToTank, reason, config.tankDuration, config.tankUOM);
+                messages.write_to_channel(message.guild, config.tankChannel, msg);
+            }, 10000);
         })
         .catch((error) => {
             message.channel.send("Failed to remove roles for " + userToTank + 
@@ -196,7 +196,6 @@ function handleCheckTank(message) {
         var obj = json[n];
         if (obj.archive) {
             continue;   
-
         }
         var datediff = helpers.getDateDiffString(ts, obj.time_tanked)
         msg = "(tanked " + datediff + " ago by " + obj.tanked_by + " for " + obj.reason + ")";
@@ -251,16 +250,19 @@ function handleTankStats(message) {
 }
 
 function handleHelp(message) {
-    let embed = new Discord.RichEmbed()
-        .addField("&&tank", "drunk tanks a user. usage: &&tank @user reason.")
-        .addField("&&checktank", "Checks the current users in the tank.")
-        .addField("&&untank", "Untank a user. usage: &&untank @user reason.")
-        .addField("&&tankstats", "Stats for fun. Not implemented yet.")
-        .addField("&&help", "Sends this help embed")
-        .setTitle(config.bot_name + " " + BOT_VERSION + " - commands help")
-        .setFooter("Here you have all bot commands you can use!")
-        .setColor("AQUA");
+    var help = "==help==" +
+        "\r\n" + config.commandPrefix +"tank - drunk tanks a user. usage: "+config.commandPrefix+"tank @user reason." +
+        "\r\n" + config.commandPrefix +"checktank - Checks the current users in the tank." +
+        "\r\n" + config.commandPrefix +"untank - Untank a user. usage: "+config.commandPrefix+"untank @user reason." +
+        "\r\n" + config.commandPrefix +"tankstats - Stats for fun. Not implemented yet." +
+        "\r\n" + config.commandPrefix +"help - Sends this help message" +
+        "\r\n" +
+        "\r\n" + config.bot_name + " " + BOT_VERSION + " by stevie_pricks";
 
-    // Send the embed with message.channel.send()
-    message.channel.send({ embed: embed });
+
+    message.channel.send(help);
+}
+
+function handleBacon(message) {
+    message.channel.send("BACON IS DELICIOUS AND YOUR MA IS A MATTRESS");
 }
