@@ -3,6 +3,7 @@ require('dotenv').config();
 export const drunktankRole = "795125880363679745";
 export const tankChannel = "795125618957484052";
 export const logChannel = "795125578494640188";
+export const botMasterRole = "";
 export const tankUOM = "hours";
 export const tankDuration = "12";
 export const commandPrefix = "&&";

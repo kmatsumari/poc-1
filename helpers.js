@@ -65,6 +65,11 @@ function trimMsg(message) {
     message.content.slice(command.length);
 }
 
+//Check if a user has a particular role
+function checkUserRole(userObj, roleId) {
+    
+}
+
 exports.getDateDiffString = getDateDiffString;
 exports.getReason = getReason;
 exports.validateReason = validateReason;
