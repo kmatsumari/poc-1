@@ -228,25 +228,194 @@ function handleCheckTank(message) {
 }
 
 function handleTankStats(message) {
-    message.channel.send("There are X people currently tanked" +
-    "\r\nY unique people have been in the drunk tank" +
-    "\r\nThe average time spent in the drunk tank is x hours" +
-    "\r\n" +
-    "\r\n==Drunk tank hall of shame==" + 
-    "\r\n1. Nathan - yy times in the tank, total of xx hours." +
-    "\r\n2. stevie_pricks - yy times in the tank, total of xx hours." +
-    "\r\n3. Paddy - yy times in the tank, total of xx hours." +
-    "\r\n4. Tom_Carry - yy times in the tank, total of xx hours." +
-    "\r\n5. Wednesday - yy times in the tank, total of xx hours." +
-    "\r\n" +
-    "\r\n==Most Korrupt mods==" + 
-    "\r\n1. Nathan - tanked x times (y unique users) for a total of z hours. Favourite victim: Oliver (3 tanks)." +
-    "\r\n2. stevie_pricks - tanked x times (y unique users) for a total of z hours. Favourite victim: Oliver (3 tanks)." +
-    "\r\n3. Paddy - tanked x times (y unique users) for a total of z hours. Favourite victim: Oliver (3 tanks)." +
-    "\r\n4. Tom_Carry - tanked x times (y unique users) for a total of z hours. Favourite victim: Oliver (3 tanks)." +
-    "\r\n5. Wednesday - tanked x times (y unique users) for a total of z hours. Favourite victim: Oliver (3 tanks)." 
+    var json = persistence.getTankedUsers();
+
+    var tankerStats = {};
+    var tankeeStats = {};
+    var currentTanked = 0;
+    var everTanked = 0;
+    var uniqueTankings = 0;
+
+    json.forEach( (obj) => {
+        everTanked++;
+
+        if (!obj.archive) currentTanked++;
+
+        if (tankeeStats[obj.user_tanked] == undefined) {
+            tankeeStats[obj.user_tanked] = {
+                count: 1
+            };
+            uniqueTankings++;
+        }
+        else {
+            tankeeStats[obj.user_tanked].count += 1;
+        }
+        if (tankerStats[obj.tanked_by] == undefined) {
+            tankerStats[obj.tanked_by] = {
+                count: 1,
+                unique: 1,
+                tankees: [obj.user_tanked]
+            };
+        }
+        else {
+            tankerStats[obj.tanked_by].count += 1;
+            tankerStats[obj.tanked_by].unique += tankerStats[obj.tanked_by].tankees.includes(obj.user_tanked) ? 0 : 1
+            tankerStats[obj.tanked_by].tankees.push(obj.user_tanked);
+        }
+    });
+
+
+    tankeeTopFive = getTopFive(tankeeStats);
+    tankerTopFive = getTopFive(tankerStats);
+
+    var msg = "There are " + currentTanked + " people currently tanked.";
+    msg += "\r\n"+everTanked+" tankings have occurred in total."
+    msg += "\r\n"+uniqueTankings+" unique users have been tanked."
+    msg += "\r\n==Drunk tank hall of shame=="
+    var n = 1;
+    tankeeTopFive.forEach((obj)=> {
+        msg+= "\r\n" + n + ". " + obj.name + " has been tanked " + obj.num.count + " times.";
+        n++;
+    })
+    msg += "\r\n==Most Korrupt Mods=="
+    var y = 1;
+    tankerTopFive.forEach((obj)=> {
+        if (obj.name != "") {
+            msg+= "\r\n" + y + ". " + obj.name + " has tanked on " + obj.num.count + " occasions ("+obj.num.unique+" unique users). Favourite victim: " + mode(obj.num.tankees);
+            y++;
+        }
+    });
     
-    );
+    message.channel.send(msg);
+}
+
+function mode(array)
+{
+    if(array == undefined)
+        return "";
+    if(array.length == 0)
+        return "";
+    var modeMap = {};
+    var maxEl = array[0], maxCount = 1;
+    for(var i = 0; i < array.length; i++)
+    {
+        var el = array[i];
+        if(modeMap[el] == null)
+            modeMap[el] = 1;
+        else
+            modeMap[el]++;  
+        if(modeMap[el] > maxCount)
+        {
+            maxEl = el;
+            maxCount = modeMap[el];
+        }
+    }
+    return maxEl;
+}
+
+// This code is TERRIBLE and needs rewritten
+// i did it in a rush on a sunday evening and couldn't be fucked looking things up
+// I'm not a JS developer, bite me.
+function getTopFive(stats) {
+    var first = {
+        num: {
+            count: 0
+        },
+        name:  ""
+    };
+    var second={
+        num: {
+            count: 0
+        },
+        name:  ""
+    };
+    var third={
+        num: {
+            count: 0
+        },
+        name:  ""
+    };
+    var fourth={
+        num: {
+            count: 0
+        },
+        name:  ""
+    };
+    var fifth={
+        num: {
+            count: 0
+        },
+        name:  ""
+    };
+
+    Object.entries(stats).forEach((value) => {
+        
+        var key = value[0];
+        var val = value[1];
+
+        if (val.count >= first.num.count) {
+            fifth = fourth;
+            fourth = third;
+            third = second;
+            second = first;
+
+            first = {
+                name: key,
+                num: val
+            }
+
+            return;
+        }
+        if (val.count >= second.num.count) {
+            fifth = fourth;
+            fourth = third;
+            third = second;
+            second = {
+                name: key,
+                num: val
+            }
+
+            return;
+        }
+        if (val.count >= third.num.count) {
+            fifth = fourth;
+            fourth = third;
+
+            third = {
+                name: key,
+                num: val
+            }
+
+            return;
+        }
+        if (val.count >= fourth.num.count) {
+            fifth = fourth;
+
+            fourth = {
+                name: key,
+                num: val
+            }
+
+            return;
+        }
+        if (val.count >= fifth.num.count) {
+            fifth = {
+                name: key,
+                num: val
+            }
+
+            return;
+        }
+    });
+
+    var top5 = []
+    if (first.name != "") top5.push(first);
+    if (second.name != "") top5.push(second);
+    if (third.name != "") top5.push(third);
+    if (fourth.name != "") top5.push(fourth);
+    if (fifth.name != "") top5.push(fifth);
+
+    return top5;
 }
 
 function handleHelp(message) {
