@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "node tests.js",
-    "run": "node main.js"
+    "run:testserver": "node main.js test",
+    "run:druncord": "node main.js druncord"
   },
   "license": "ISC",
   "dependencies": {
