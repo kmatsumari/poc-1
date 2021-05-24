@@ -91,10 +91,7 @@ client.on("message", async  (message) => {
 
 async function handleSyncTank(message) {
     refreshedRoleObj = await message.guild.roles.fetch(config.drunktankRole, false, true);
-
-
     var tankees = persistence.getTankedUsers();
-
     var tankedDict = {};
 
     for (n=0;n<tankees.length; n++) {
@@ -103,7 +100,6 @@ async function handleSyncTank(message) {
             continue;   
         }
         tankedDict[obj.user_tanked] = obj;
-    
     }
 
     var toSave = [];
@@ -135,9 +131,9 @@ async function handleSyncTank(message) {
         persistence.saveTanking("Unknown", message.guild, toSave[n], "Added by synctank command", [], config.tankDuration, config.tankDuration);
     }
 
-    for (n=0; n<toSaveUntank.length; n++) {
-        persistence.untankUser(toSaveUntank[n]);
-    }
+    toSaveUntank.forEach((x)=> {
+        persistence.untankUser(x);
+    });
 
     message.channel.send("TankSync complete. " + toSave.length + " entries added to the tank log, " + toSaveUntank.length + " removed.");
 }
