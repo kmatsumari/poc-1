@@ -32,6 +32,8 @@ client.on("message", async  (message) => {
     // It will do nothing when the message doesnt start with the prefix
     if(!message.content.startsWith(config.commandPrefix)) return;
 
+    if (message.content.startsWith(config.commandPrefix + config.commandPrefix)) return;
+
     const command = helpers.trimCommand(message);
     const msg = helpers.trimMsg(message);
 
