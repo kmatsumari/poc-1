@@ -260,12 +260,17 @@ function handleCheckTank(message) {
             continue;   
         }
         var datediff = helpers.getDateDiffString(ts, obj.time_tanked)
-        msg = "(tanked " + datediff + " ago by " + obj.tanked_by + " for " + obj.reason + ")";
-        if (ts > obj.time_to_untank) {
-            msg = obj.user_tanked + " has served their time. " + msg; 
+        if (obj.tanked_by == "Unknown") {
+            msg = obj.user_tanked + " was not tanked by me. I learned about them " + datediff + " ago."; 
         }
         else {
-            msg = obj.user_tanked + " still has time to wait. " + msg
+            msg = "(tanked " + datediff + " ago by " + obj.tanked_by + " for " + obj.reason + ")";
+            if (ts > obj.time_to_untank) {
+                msg = obj.user_tanked + " has served their time. " + msg; 
+            }
+            else {
+                msg = obj.user_tanked + " still has time to wait. " + msg
+            }
         }
 
         //beware of the max length for a message
