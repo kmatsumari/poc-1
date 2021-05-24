@@ -37,11 +37,10 @@ function saveTanking(author, guild, userToTank, reason, oldRoles, duration, uom)
         fs.writeFileSync(config.json_path, JSON.stringify([tankee_obj]));
     }
     else {
-    return fs.readFile(config.json_path, function (err, data) {
-            var json = JSON.parse(data);
-            json.push(tankee_obj);
-            fs.writeFileSync(config.json_path, JSON.stringify(json));
-        })
+        var data = fs.readFileSync(config.json_path);
+        var json = JSON.parse(data);
+        json.push(tankee_obj);
+        fs.writeFileSync(config.json_path, JSON.stringify(json));
     }
 }
 

@@ -19,7 +19,9 @@ persistence.injectConfig(config);
 helpers.injectConfig(config);
 
 const Discord = require("discord.js");
-const client  = new Discord.Client();
+const client  = new Discord.Client({
+    ws: { intents: Discord.Intents.ALL } 
+});
 client.login(config.access_key);
 
 
@@ -76,12 +78,51 @@ client.on("message", async  (message) => {
             handleBacon(message);  
             break;
 
+        case "synctank":
+            return handleSyncTank(message);
+            break;
+
         default:
             message.channel.send("I don't know that command. Want me to build it? Do it yourself you lazy throbber");
             break;
     }
 });
 
+
+async function handleSyncTank(message) {
+    refreshedRoleObj = await message.guild.roles.fetch(config.drunktankRole, false, true);
+
+
+    var tankees = persistence.getTankedUsers();
+
+    var tankedDict = {};
+
+    for (n=0;n<tankees.length; n++) {
+        var obj = tankees[n];
+        if (obj.archive) {
+            continue;   
+        }
+        tankedDict[obj.user_tanked] = obj;
+    
+    }
+
+    var toSave = []
+    refreshedRoleObj.members.forEach( (key,value) => {
+        var dictKey = "<@!" + key + ">"
+
+        if (tankedDict[dictKey] == undefined) {
+            //we need to add this user to the tank json.
+            message.channel.send(dictKey + " is missing from my tank log. Adding now.");
+            toSave.push(dictKey);
+        }
+    });
+
+    for (n=0; n<toSave.length; n++) {
+        persistence.saveTanking("Unknown", message.guild, toSave[n], "Added by synctank command", [], config.tankDuration, config.tankDuration);
+    }
+
+    message.channel.send("TankSync complete. " + toSave.length + " entries added to the tank log.");
+}
 function handleUntank(message, msg) {
     tokens = helpers.tokenize(msg.substr(1,msg.length -1 ));
         
@@ -170,7 +211,7 @@ async function handleTank(message, msg) {
             return messages.write_to_channel(message.guild, config.logChannel, msg)
         })
         .then(() => {
-            return persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
+            persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
         })
         .then(() => {
             msg = messages.confirm_message(message.author.username, userToTank, reason, role_name);
@@ -425,7 +466,8 @@ function handleHelp(message) {
         "\r\n" + config.commandPrefix +"tank - drunk tanks a user. usage: "+config.commandPrefix+"tank @user reason." +
         "\r\n" + config.commandPrefix +"checktank - Checks the current users in the tank." +
         "\r\n" + config.commandPrefix +"untank - Untank a user. usage: "+config.commandPrefix+"untank @user reason." +
-        "\r\n" + config.commandPrefix +"tankstats - Stats for fun. Not implemented yet." +
+        "\r\n" + config.commandPrefix +"tankstats - Stats for fun. " +
+        "\r\n" + config.commandPrefix +"synctank - sync up the 2drunk2party role with the Bot tank log. " +
         "\r\n" + config.commandPrefix +"help - Sends this help message" +
         "\r\n" +
         "\r\n" + config.bot_name + " " + BOT_VERSION + " by stevie_pricks";
