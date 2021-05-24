@@ -17,16 +17,17 @@ node main.js configfilename
 Will load the app with config file located in ./config/configfilename.js
 
 Options:
-drunktankRole = Role ID for the role that locks a user out of the other channels
-tankChannel = Channel ID for the drunk-tank channel to message the tankee
-logChannel = Channel ID to log tank events to.
-botMasterRole = Role ID for the role that will be able to execute bot commands. No one without this role should be able to use. Disclaimer: Not tested and probably easily hackable.
-tankUOM = hours, minutes or days 
-tankDuration = default duration for people to remain in the tank
-commandPrefix = the bot command prefix
-access_key = Your discord bot access key. Keep this in .env and access via process.env
-json_path = Path to a local json file that the app can use for storage.
-bot_name = Give your bot a name. Call it whatever you please.
+
+* drunktankRole = Role ID for the role that locks a user out of the other channels
+* tankChannel = Channel ID for the drunk-tank channel to message the tankee
+* logChannel = Channel ID to log tank events to.
+* botMasterRole = Role ID for the role that will be able to execute bot commands. No one without this role should be able to use. Disclaimer: Not tested and probably easily hackable.
+* tankUOM = hours, minutes or days 
+* tankDuration = default duration for people to remain in the tank
+* commandPrefix = the bot command prefix
+* access_key = Your discord bot access key. Keep this in .env and access via process.env
+* json_path = Path to a local json file that the app can use for storage.
+* bot_name = Give your bot a name. Call it whatever you please.
 
 NB: Be careful with your access key. Keep it out of source control. I keep mine in .env and have it gitignored.
 
