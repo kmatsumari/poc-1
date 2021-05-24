@@ -106,7 +106,8 @@ async function handleSyncTank(message) {
     
     }
 
-    var toSave = []
+    var toSave = [];
+    var usersWithRoleDict = {};
     refreshedRoleObj.members.forEach( (key,value) => {
         var dictKey = "<@!" + key + ">"
 
@@ -115,13 +116,30 @@ async function handleSyncTank(message) {
             message.channel.send(dictKey + " is missing from my tank log. Adding now.");
             toSave.push(dictKey);
         }
+        usersWithRoleDict[dictKey] = dictKey;
     });
+
+    toSaveUntank = [];
+    for (n=0;n<tankees.length; n++) {
+        var obj = tankees[n];
+        if (obj.archive) {
+            continue;   
+        }
+        if (usersWithRoleDict[obj.user_tanked] == undefined) {
+            //this user has had the role removed, untank here
+            toSaveUntank.push(obj.user_tanked);
+        }
+    }
 
     for (n=0; n<toSave.length; n++) {
         persistence.saveTanking("Unknown", message.guild, toSave[n], "Added by synctank command", [], config.tankDuration, config.tankDuration);
     }
 
-    message.channel.send("TankSync complete. " + toSave.length + " entries added to the tank log.");
+    for (n=0; n<toSaveUntank.length; n++) {
+        persistence.untankUser(toSaveUntank[n]);
+    }
+
+    message.channel.send("TankSync complete. " + toSave.length + " entries added to the tank log, " + toSaveUntank.length + " removed.");
 }
 function handleUntank(message, msg) {
     tokens = helpers.tokenize(msg.substr(1,msg.length -1 ));
@@ -156,7 +174,6 @@ function handleUntank(message, msg) {
 
     console.log("Untanking " + userToUntank + " -- initiated by " + message.author.username);
 
-    console.log(user.roles_to_give_back);
     return guild_member.roles.set(user.roles_to_give_back) 
         .then(() => {
             let ts = Date.now();
@@ -206,6 +223,12 @@ async function handleTank(message, msg) {
   
     //clear all their existing roles
     return guild_member.roles.set([config.drunktankRole], "Drunk tanked by " + message.author.username)    
+        .then(() => {
+            // console.log(guild_member.voice);
+            // if (guild_member.voice.channel != undefined) {
+            //     return guild_member.voice.kick("drunk tanked");
+            // }
+        })
         .then(() => {
             msg = messages.log_blue_tank_msg(message.author.username, guild_member, userToTank, reason);
             return messages.write_to_channel(message.guild, config.logChannel, msg)

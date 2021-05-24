@@ -32,17 +32,19 @@ Options:
 NB: Be careful with your access key. Keep it out of source control. I keep mine in .env and have it gitignored.
 
 
-TODO LIST
+TODO LIST (Features)
+- Disconnect users from any voice channels on tanking
+- Auto untank after time served (controversial)
+- Allow a user to specify duration with command ie .tank @user 12h reasons
+- Improve reporting - expand tankstats to allow profiling individual users ie .checkuser @user could return all the times they were tanked and the reasons etc
+- Last warning system - mark a user as on their last warning and auto-ban on next tank
+- Improve user access control to enable granular access to commands rather than all or nothing
+
+TODO LIST (architecture)
 - Add a database backend instead of a json file
 - Containerize
-- Disconnect users from any voice channels on tanking
-- Scheduled tank reminders
-- Configurable duration using the command
-- Reporting - how many times a user been tanked, etc
-- Warning system - mark a user as on their last warning and ban on next tank
 - Unit tests
-- Archival function of old tankings.
-- Improve user access control to enable granular access to commands rather than all or nothing
+- Archival of old tankings
 
 LONG TERM
 - Genericise so it can work on > 1 server with a single instance
