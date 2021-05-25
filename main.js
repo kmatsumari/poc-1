@@ -1,15 +1,15 @@
-const BOT_VERSION = "1.0.0";
+const BOT_VERSION = "1.1.0";
 
 //Setup config file
 if (process.argv.length < 3) {
-    console.log("Please pass the config file as a parameter.")
+    console.log("Please pass the config file as a parameter.");
     return;
 }
 configFile = process.argv[2];
 const config = require('./config/' + configFile);
 const helpers = require('./helpers');
 const persistence = require('./persistence');
-const messages = require('./messages')
+const messages = require('./messages');
 
 
 console.log(config.bot_name + " " + BOT_VERSION + " starting up");
@@ -170,6 +170,7 @@ function handleUntank(message, msg) {
 
     console.log("Untanking " + userToUntank + " -- initiated by " + message.author.username);
 
+    console.log(user.roles_to_give_back);
     return guild_member.roles.set(user.roles_to_give_back) 
         .then(() => {
             let ts = Date.now();
@@ -178,7 +179,7 @@ function handleUntank(message, msg) {
             return messages.write_to_channel(message.guild, config.logChannel, msg);
         }) 
         .then(() => {
-            msg = messages.confirm_untank_message(message.author.username, userToUntank, reason, user.roles_to_give_back)
+            msg = messages.confirm_untank_message(message.author.username, userToUntank, reason, user.roles_to_give_back);
             return message.channel.send(msg);
         })
         .catch((error) => {
@@ -220,17 +221,11 @@ async function handleTank(message, msg) {
     //clear all their existing roles
     return guild_member.roles.set([config.drunktankRole], "Drunk tanked by " + message.author.username)    
         .then(() => {
-            // console.log(guild_member.voice);
-            // if (guild_member.voice.channel != undefined) {
-            //     return guild_member.voice.kick("drunk tanked");
-            // }
-        })
-        .then(() => {
             msg = messages.log_blue_tank_msg(message.author.username, guild_member, userToTank, reason);
-            return messages.write_to_channel(message.guild, config.logChannel, msg)
+            return messages.write_to_channel(message.guild, config.logChannel, msg);
         })
         .then(() => {
-            persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM)
+            return persistence.saveTanking(message.author.username, message.guild, userToTank, reason, oldRoles, config.tankDuration, config.tankUOM);
         })
         .then(() => {
             msg = messages.confirm_message(message.author.username, userToTank, reason, role_name);
@@ -259,7 +254,7 @@ function handleCheckTank(message) {
         if (obj.archive) {
             continue;   
         }
-        var datediff = helpers.getDateDiffString(ts, obj.time_tanked)
+        var datediff = helpers.getDateDiffString(ts, obj.time_tanked);
         if (obj.tanked_by == "Unknown") {
             msg = obj.user_tanked + " was not tanked by me. I learned about them " + datediff + " ago."; 
         }
@@ -301,62 +296,57 @@ function handleTankStats(message) {
     var tankeeStats = {};
     var currentTanked = 0;
     var everTanked = 0;
-    var uniqueTankings = 0;
 
     json.forEach( (obj) => {
         everTanked++;
-
         if (!obj.archive) currentTanked++;
-
+				
         if (tankeeStats[obj.user_tanked] == undefined) {
-            tankeeStats[obj.user_tanked] = {
-                count: 1
-            };
-            uniqueTankings++;
-        }
-        else {
-            tankeeStats[obj.user_tanked].count += 1;
+            tankeeStats[obj.user_tanked] = 1;
+        } else {
+            tankeeStats[obj.user_tanked]++;
         }
         if (tankerStats[obj.tanked_by] == undefined) {
-            tankerStats[obj.tanked_by] = {
-                count: 1,
-                unique: 1,
-                tankees: [obj.user_tanked]
-            };
-        }
-        else {
-            tankerStats[obj.tanked_by].count += 1;
-            tankerStats[obj.tanked_by].unique += tankerStats[obj.tanked_by].tankees.includes(obj.user_tanked) ? 0 : 1
-            tankerStats[obj.tanked_by].tankees.push(obj.user_tanked);
+            tankerStats[obj.tanked_by] = {};
+			tankerStats[obj.tanked_by][obj.user_tanked] = 1;
+        } else {
+            if (tankerStats[obj.tanked_by][obj.user_tanked] == undefined) {
+				tankerStats[obj.tanked_by][obj.user_tanked] = 1;
+			} else {
+				tankerStats[obj.tanked_by][obj.user_tanked]++;
+			}
         }
     });
 
-
     tankeeTopFive = getTopFive(tankeeStats);
     tankerTopFive = getTopFive(tankerStats);
-
+		
     var msg = "There are " + currentTanked + " people currently tanked.";
-    msg += "\r\n"+everTanked+" tankings have occurred in total."
-    msg += "\r\n"+uniqueTankings+" unique users have been tanked."
-    msg += "\r\n==Drunk tank hall of shame=="
-    var n = 1;
-    tankeeTopFive.forEach((obj)=> {
-        msg+= "\r\n" + n + ". " + obj.name + " has been tanked " + obj.num.count + " times.";
-        n++;
-    })
-    msg += "\r\n==Most Korrupt Mods=="
-    var y = 1;
-    tankerTopFive.forEach((obj)=> {
-        if (obj.name != "") {
-            msg+= "\r\n" + y + ". " + obj.name + " has tanked on " + obj.num.count + " occasions ("+obj.num.unique+" unique users). Favourite victim: " + mode(obj.num.tankees);
-            y++;
+    msg += "\r\n"+everTanked+" tankings have occurred in total.";
+    msg += "\r\n"+Object.keys(tankeeStats).length+" unique users have been tanked.";
+    msg += "\r\n==Drunk tank hall of shame==";
+    tankeeTopFive.forEach((obj,i)=> {
+        msg+= "\r\n" + (i + 1) + ". " + obj.name + " has been tanked " + obj.count + " times.";
+    });
+    msg += "\r\n==Most Korrupt Mods==";
+    tankerTopFive.forEach((obj,i) => {
+			  let vn = "";
+				let vc = 0;
+        Object.entries(tankerStats[obj.name]).forEach((v) => {
+						if (v[1] > vc) {
+								vn = v[0];
+								vc = v[1];
+						}
+			  });
+				if (obj.name != "") {
+            msg += "\r\n" + (i + 1) + ". " + obj.name + " has tanked on " + obj.count + " occasions ("+Object.keys(tankerStats[obj.name]).length+" unique users). Favourite victim: " + vn;
         }
     });
     
     message.channel.send(msg);
 }
 
-function mode(array)
+function mode(array) // Unused, possibly to be removed
 {
     if(array == undefined)
         return "";
@@ -380,109 +370,28 @@ function mode(array)
     return maxEl;
 }
 
-// This code is TERRIBLE and needs rewritten
-// i did it in a rush on a sunday evening and couldn't be fucked looking things up
-// I'm not a JS developer, bite me.
+// JS reduced down and optimized, makes use of Arrays.sort() and .splice() for a quick top 5.
+// Output array is simplified.
 function getTopFive(stats) {
-    var first = {
-        num: {
-            count: 0
-        },
-        name:  ""
-    };
-    var second={
-        num: {
-            count: 0
-        },
-        name:  ""
-    };
-    var third={
-        num: {
-            count: 0
-        },
-        name:  ""
-    };
-    var fourth={
-        num: {
-            count: 0
-        },
-        name:  ""
-    };
-    var fifth={
-        num: {
-            count: 0
-        },
-        name:  ""
-    };
-
-    Object.entries(stats).forEach((value) => {
-        
-        var key = value[0];
-        var val = value[1];
-
-        if (val.count >= first.num.count) {
-            fifth = fourth;
-            fourth = third;
-            third = second;
-            second = first;
-
-            first = {
-                name: key,
-                num: val
-            }
-
-            return;
-        }
-        if (val.count >= second.num.count) {
-            fifth = fourth;
-            fourth = third;
-            third = second;
-            second = {
-                name: key,
-                num: val
-            }
-
-            return;
-        }
-        if (val.count >= third.num.count) {
-            fifth = fourth;
-            fourth = third;
-
-            third = {
-                name: key,
-                num: val
-            }
-
-            return;
-        }
-        if (val.count >= fourth.num.count) {
-            fifth = fourth;
-
-            fourth = {
-                name: key,
-                num: val
-            }
-
-            return;
-        }
-        if (val.count >= fifth.num.count) {
-            fifth = {
-                name: key,
-                num: val
-            }
-
-            return;
-        }
-    });
-
-    var top5 = []
-    if (first.name != "") top5.push(first);
-    if (second.name != "") top5.push(second);
-    if (third.name != "") top5.push(third);
-    if (fourth.name != "") top5.push(fourth);
-    if (fifth.name != "") top5.push(fifth);
-
-    return top5;
+		var top5 = [];
+		Object.entries(stats).forEach((r) => {
+				var k = r[0];
+				var v = r[1];
+				
+				if (typeof v === "object") {
+						var c = 0;
+						Object.entries(v).forEach((i) => {
+								c += i[1];
+						});
+						top5.push({'name':k,'count':c});
+				} else {
+						top5.push({'name':k,'count':v});
+				}
+				
+				top5.sort((a,b) => {return b.count - a.count;});
+				top5.splice(5);
+		});
+		return top5;
 }
 
 function handleHelp(message) {
@@ -491,7 +400,7 @@ function handleHelp(message) {
         "\r\n" + config.commandPrefix +"checktank - Checks the current users in the tank." +
         "\r\n" + config.commandPrefix +"untank - Untank a user. usage: "+config.commandPrefix+"untank @user reason." +
         "\r\n" + config.commandPrefix +"tankstats - Stats for fun. " +
-        "\r\n" + config.commandPrefix +"synctank - sync up the 2drunk2party role with the Bot tank log. " +
+        "\r\n" + config.commandPrefix +"synctank - sync up the 2drunk2party role with the Bot tank log. " +        
         "\r\n" + config.commandPrefix +"help - Sends this help message" +
         "\r\n" +
         "\r\n" + config.bot_name + " " + BOT_VERSION + " by stevie_pricks";
